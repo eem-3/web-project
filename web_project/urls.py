@@ -21,8 +21,7 @@ from core.views import SignUpView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('accounts/signup/', SignUpView.as_view(), name='signup'),
-    # name='signup' -> used in nav bar: {% url 'signup' %}
     path('accounts/', include('django.contrib.auth.urls')),
+    path('accounts/signup/', SignUpView.as_view(), name='signup'),
     path('', include('core.urls')),
 ]
