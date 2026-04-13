@@ -13,26 +13,26 @@
 
         <div class="row row-cols-1 row-cols-md-3 g-4">
 
-            {% for entity in entities %}
-                <div class="col">
-                    <div class="card h-100 shadow-sm">
-                        <div class="card-body">
-                            <h5 class="card-title text-primary">{{ entity.title }}</h5>
-                            <p class="card-text text-muted">{{ entity.description|truncatewords:20 }}</p>
-                        </div>
-                        <div class="card-footer bg-transparent border-top-0 d-flex justify-content-between align-items-center">
-                            <span class="badge bg-secondary">{{ entity.up_votes }} vots</span>
-                            <a href="#" class="btn btn-sm btn-outline-primary">Veure més</a>
+                {% for entity in entities %}
+                    <div class="col">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title text-primary">{{ entity.title }}</h5>
+                                <p class="card-text text-muted">{{ entity.description|truncatewords:20 }}</p>
+                            </div>
+                            <div class="card-footer bg-transparent border-top-0 d-flex justify-content-between align-items-center">
+                                <span class="badge bg-secondary">{{ entity.up_votes }} vots</span>
+                                <a href="#" class="btn btn-sm btn-outline-primary">Veure més</a>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                {% empty %}
+                    {% empty %}
 
-                <div class="col-12">
-                    <p class="text-center">Encara no s'ha pujat cap contingut.</p>
-                </div>
-            {% endfor %}
+                    <div class="col-12">
+                        <p class="text-center">Encara no s'ha pujat cap contingut.</p>
+                    </div>
+                {% endfor %}
         </div>
     </div>
 
