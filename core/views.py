@@ -5,11 +5,14 @@ from django.views.generic import CreateView
 from .models import Entity
 from django.http import HttpResponse
 from .forms import BootstrapUserCreationForm
+from django.contrib.auth.decorators import login_required
 
 def view_home(request):
-    llista_entitats = Entity.objects.all()
-    return render(request, 'home.html', {'entities': llista_entitats})
-
+    if request.user.is_authenticated:
+        llista_entitats = Entity.objects.all()
+        return render(request, 'components/home.html', {'entities': llista_entitats})
+    else:
+        return render(request, 'components/homedemo.html')
 
 class SignUpView(CreateView):
     """Sign up view."""
