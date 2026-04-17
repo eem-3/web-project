@@ -5,6 +5,8 @@ from core.views import SignUpView, view_home
 
 from core.views import SignUpView
 from django.contrib.auth.views import LogoutView
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -15,3 +17,6 @@ urlpatterns = [
     path('home/', view_home, name='home'),
     path('', include('core.urls')),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
