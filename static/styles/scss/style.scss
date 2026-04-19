@@ -7,6 +7,10 @@ $text-main: #212529;
 
 // 2. ESTILOS BASE
 body {
+    position: relative;
+    padding-bottom: 60px;
+    height: fit-content;
+    min-height: calc(100vh);
     font-family: $font-main;
     font-size: 1rem;
     font-weight: 400;
@@ -58,4 +62,10 @@ code {
     font-size: 0.875em;
     color: #d63384;
     word-wrap: break-word;
+}
+
+footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
 }
