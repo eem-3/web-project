@@ -9,7 +9,7 @@
     {% extends 'base.html' %} {% block content %}
 
     <div class="container py-5">
-        <h1 class="mb-4 text-center">Explora Recursos</h1>
+        <h1 class="mb-4 text-center">Explore Resources</h1>
 
         <div class="row row-cols-1 row-cols-md-3 g-4">
 
@@ -21,8 +21,8 @@
                             <p class="card-text text-muted">{{ entity.description|truncatewords:20 }}</p>
                         </div>
                         <div class="card-footer bg-transparent border-top-0 d-flex justify-content-between align-items-center">
-                            <span class="badge bg-secondary">{{ entity.up_votes }} vots</span>
-                            <a href="#" class="btn btn-sm btn-outline-primary">Veure més</a>
+                            <span class="badge bg-secondary">{{ entity.up_votes }} votes</span>
+                            <a href="#" class="btn btn-sm btn-outline-primary">See more</a>
                         </div>
                     </div>
                 </div>
@@ -30,7 +30,7 @@
                 {% empty %}
 
                 <div class="col-12">
-                    <p class="text-center">Encara no s'ha pujat cap contingut.</p>
+                    <p class="text-center">No content has been uploaded yet.</p>
                 </div>
             {% endfor %}
         </div>
