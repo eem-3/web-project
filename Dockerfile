@@ -4,6 +4,8 @@ FROM python:3.13-slim
 # Install uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
+ENV UV_LINK_MODE=copy
+
 # Set the working directory inside the container
 WORKDIR /app
 
@@ -22,11 +24,13 @@ COPY . .
 # Tell Docker this container will listen on port 8000
 EXPOSE 8000
 
-# Command that runs when the container starts:
-# 1. Apply database migrations (create/update tables)
-# 2. Start Django's development server on all interfaces (0.0.0.0)
+
+
 COPY entrypoint.sh /entrypoint.sh
+
+# This command removes the Windows carriage returns (\r)
+RUN sed -i 's/\r$//' /entrypoint.sh
+
 RUN chmod +x /entrypoint.sh
 
-# Esto cumple con la recomendación JSON y permite múltiples comandos
 ENTRYPOINT ["/entrypoint.sh"]
