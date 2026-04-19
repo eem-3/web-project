@@ -1,0 +1,53 @@
+body {
+  font-family: "Segoe UI", sans-serif;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #212529;
+  background-color: #f8f9fa;
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.navbar {
+  background-color: var(--bs-light);
+  border-bottom: 1px solid var(--bs-border-color);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--bs-heading-color, inherit);
+}
+
+a {
+  color: var(--bs-primary);
+  text-decoration: none;
+  transition: color 0.2s ease-in-out;
+}
+a:hover {
+  color: var(--bs-primary-border-subtle);
+  text-decoration: underline;
+}
+
+.main-container {
+  padding-top: 3rem;
+  padding-bottom: 3rem;
+}
+
+.text-muted-custom {
+  color: var(--bs-secondary-color) !important;
+  font-size: 0.9rem;
+}
+
+code {
+  font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.875em;
+  color: #d63384;
+  word-wrap: break-word;
+}
+
+/*# sourceMappingURL=style.css.map */
