@@ -19,3 +19,30 @@ class SignUpView(CreateView):
     form_class = BootstrapUserCreationForm         # the form to show (username + password + confirm)
     template_name = 'registration/signup.html'     # the HTML template to render
     success_url = reverse_lazy('login')            # after signup, redirect to the login page
+
+
+from django.shortcuts import render, get_object_or_404
+from .models import Entity, Project, Media, Comment
+
+
+def EntityView1(request, pk):
+    # Obtenemos la entidad base
+    entity = get_object_or_404(Entity, pk=pk)
+
+    # Intentamos obtener la versión específica (Project o Media)
+    # Django permite acceder al "hijo" desde el "padre" en minúsculas
+    project = getattr(entity, 'project', None)
+    media = getattr(entity, 'media', None)
+
+    # Obtenemos los comentarios asociados a esta entidad
+    comments = Comment.objects.filter(entity=entity).order_by('-created_at')
+
+    context = {
+        'entity': entity,
+        'project': project,
+        'media': media,
+        'comments': comments,
+    }
+
+    return render(request, 'components/entity_detail.html', context)
+

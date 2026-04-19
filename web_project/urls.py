@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.urls import include, path
 
-from core.views import SignUpView, view_home
+from core.views import SignUpView, view_home, EntityView1
 
 from core.views import SignUpView
 from django.contrib.auth.views import LogoutView
@@ -16,6 +16,7 @@ urlpatterns = [
     path('accounts/', include('django.contrib.auth.urls')),
     path('home/', view_home, name='home'),
     path('', include('core.urls')),
+    path('<uuid:pk>', EntityView1, name='Entity'),
 ]
 
 if settings.DEBUG:

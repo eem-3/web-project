@@ -21,8 +21,8 @@
                             <p class="card-text text-muted">{{ entity.description|truncatewords:20 }}</p>
                         </div>
                         <div class="card-footer bg-transparent border-top-0 d-flex justify-content-between align-items-center">
-                            <span class="badge bg-secondary">{{ entity.up_votes }} votes</span>
-                            <a href="#" class="btn btn-sm btn-outline-primary">See more</a>
+                            <span class="badge bg-secondary">{{ entity.up_votes }} vots</span>
+                            <a href="{% url 'Entity' entity.entity_id %}" class="btn btn-sm btn-outline-primary">Veure més</a>
                         </div>
                     </div>
                 </div>
