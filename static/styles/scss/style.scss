@@ -1,0 +1,71 @@
+// 1. VARIABLES (Sass)
+$font-main: "Segoe UI", sans-serif;
+$font-code: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+$primary-color: var(--bs-primary); // Vinculado a Bootstrap
+$bg-light: #f8f9fa;
+$text-main: #212529;
+
+// 2. ESTILOS BASE
+body {
+    position: relative;
+    padding-bottom: 60px;
+    height: fit-content;
+    min-height: calc(100vh);
+    font-family: $font-main;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: $text-main;
+    background-color: $bg-light;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+.navbar {
+    background-color: var(--bs-light);
+    border-bottom: 1px solid var(--bs-border-color);
+}
+
+h1, h2, h3, h4, h5, h6 {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--bs-heading-color, inherit);
+}
+
+a {
+    color: $primary-color;
+    text-decoration: none;
+    transition: color 0.2s ease-in-out;
+
+    &:hover {
+        color: var(--bs-primary-border-subtle);
+        text-decoration: underline;
+    }
+}
+
+// 3. UTILIDADES SEMÁNTICAS (Lo que querías para limpiar el HTML)
+.main-container {
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+}
+
+// Ejemplo de cómo encapsular el texto de tus tarjetas
+.text-muted-custom {
+    color: var(--bs-secondary-color) !important;
+    font-size: 0.9rem;
+}
+
+code {
+    font-family: $font-code;
+    font-size: 0.875em;
+    color: #d63384;
+    word-wrap: break-word;
+}
+
+footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+}
