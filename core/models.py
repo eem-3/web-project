@@ -42,7 +42,7 @@ class Entity(models.Model):
         return self.title
 
 class Media(Entity):
-    file = models.FileField(upload_to='uploads/%Y/%m/%d')
+    file = models.FileField(upload_to='uploads/%Y/%m/%d', null=True)
     storage_url = models.TextField()
     filename = models.CharField(max_length=255)
     mimetype = models.CharField(max_length=100)
