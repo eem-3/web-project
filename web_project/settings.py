@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'core',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -135,3 +136,24 @@ MEDIA_URL = '/media/'
 
 # Ruta absoluta al sistema de fitxers on es guarden realment
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+REST_FRAMEWORK = {
+ 'DEFAULT_PERMISSION_CLASSES':
+('rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly',),
+
+ 'PAGINATE_BY': 10,
+
+ 'DEFAULT_PARSER_CLASSES': (
+ 'rest_framework.parsers.FormParser',
+ 'rest_framework.parsers.JSONParser',
+ 'rest_framework_xml.parsers.XMLParser',
+ 'rest_framework.parsers.FormParser',
+ 'rest_framework.parsers.MultiPartParser'
+ ),
+
+ 'DEFAULT_RENDERER_CLASSES': (
+ 'rest_framework.renderers.BrowsableAPIRenderer',
+ 'rest_framework.renderers.JSONRenderer',
+ 'rest_framework_xml.renderers.XMLRenderer',
+ ),
+}

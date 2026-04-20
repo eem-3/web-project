@@ -6,7 +6,9 @@ from django.http import HttpResponse
 from .forms import BootstrapUserCreationForm
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404
-from .models import Entity, Project, Media, Comment
+from .models import Entity, Project, Media, Comment, Tag, Status
+from rest_framework import generics
+from .serializers import EntitiesSerializer, MediaSerializer, ProjectSerializer, StatusSerializer, TagSerializer
 
 def view_home(request):
     if request.user.is_authenticated:
@@ -43,3 +45,38 @@ def EntityView1(request, pk):
 
     return render(request, 'components/entity_detail.html', context)
 
+
+
+
+### API ###
+class APIEntityList(generics.ListCreateAPIView):
+    queryset = Entity.objects.all()
+    serializer_class = EntitiesSerializer
+
+class APIEntityDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Entity.objects.all()
+    serializer_class = EntitiesSerializer
+
+class APIMediaDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Media.objects.all()
+    serializer_class = MediaSerializer
+
+class APIProjectDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Project.objects.all()
+    serializer_class = ProjectSerializer
+
+class APIStatusList(generics.ListCreateAPIView):
+    queryset = Status.objects.all()
+    serializer_class = StatusSerializer
+
+class APIStatusDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Status.objects.all()
+    serializer_class = StatusSerializer
+
+class APITagList(generics.ListCreateAPIView):
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer
+
+class APITagDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer
