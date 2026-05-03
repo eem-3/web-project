@@ -41,6 +41,13 @@ class Entity(models.Model):
     def __str__(self):
         return self.title
 
+    def get_absolute_url(self):
+        if self.type == 1:
+            return reverse('core:project_detail', kwargs={'pk': self.pk})
+        elif self.type == 2:
+            return reverse('core:media_detail', kwargs={'pk': self.pk})
+        return reverse('core:project_detail', kwargs={'pk': self.pk})
+
 class Media(Entity):
     file = models.FileField(upload_to='uploads/%Y/%m/%d', null=True)
     storage_url = models.TextField()
