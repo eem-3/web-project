@@ -1,14 +1,11 @@
 import uuid
 
-from django.shortcuts import render
-from django.contrib.auth.forms import UserCreationForm
 from django.urls import reverse_lazy
 from django.views.generic import CreateView
-from django.http import HttpResponse
 from .forms import BootstrapUserCreationForm
-from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404
-from .models import Entity, Project, Media, Comment, Tag
+from .models import Entity, Project, Media, Comment, Tag, Status
+from django.http import HttpResponseRedirect
 
 def view_home(request):
     if request.user.is_authenticated:
@@ -48,7 +45,7 @@ def EntityView1(request, pk):
 
 class PostCreateProject(CreateView):
     model = Project
-    fields = ['title', 'description', 'status', 'tags', 'media_items']
+    fields = ['title', 'description', 'tags']
     template_name = 'components/project_form.html'
     success_url = reverse_lazy('core:home')
 
@@ -86,5 +83,28 @@ class PostCreateProject(CreateView):
     def form_valid(self, form):
         form.instance.user = self.request.user
         form.instance.type = 1
-        return super().form_valid(form)
+        try:
+            form.instance.status = Status.objects.get(status_id=1)
+        except Status.DoesNotExist:
+            form.instance.status = Status.objects.first()
+        self.object = form.save()
+
+        files = self.request.FILES.getlist('upload_files')
+        for f in files:
+            new_media = Media.objects.create(
+                title=f"{f.name} [{self.object.title}]",
+                description=f"Resource uploaded for {self.object.title}",
+                description_ai="",  # Camp buit per defecte
+                user=self.request.user,
+                type=2,  # Tipus Media
+                status=self.object.status,
+                file=f,
+                filename=f.name,
+                size=f.size,
+                mimetype=f.content_type,
+                storage_url=""
+            )
+            self.object.media_items.add(new_media)
+
+        return HttpResponseRedirect(self.get_success_url())
 

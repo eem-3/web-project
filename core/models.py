@@ -46,7 +46,7 @@ class Entity(models.Model):
             return reverse('core:project_detail', kwargs={'pk': self.pk})
         elif self.type == 2:
             return reverse('core:media_detail', kwargs={'pk': self.pk})
-        return reverse('core:project_detail', kwargs={'pk': self.pk})
+        return reverse('core:home')
 
 class Media(Entity):
     file = models.FileField(upload_to='uploads/%Y/%m/%d', null=True)
