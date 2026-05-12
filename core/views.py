@@ -1,11 +1,13 @@
 import uuid
 
+from django.template.context_processors import request
 from django.urls import reverse_lazy
-from django.views.generic import CreateView
+from django.views.generic import CreateView, ListView, UpdateView, DeleteView
 from .forms import BootstrapUserCreationForm
 from django.shortcuts import render, get_object_or_404
 from .models import Entity, Project, Media, Comment, Tag, Status
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, Http404
+from django.contrib.auth.mixins import UserPassesTestMixin, LoginRequiredMixin
 
 def view_home(request):
     if request.user.is_authenticated:
@@ -108,3 +110,91 @@ class PostCreateProject(CreateView):
 
         return HttpResponseRedirect(self.get_success_url())
 
+
+class MyEntitiesView(ListView):
+    model = Entity
+    template_name = 'components/my_entities.html'
+    context_object_name = 'entities'
+
+    def get_queryset(self):
+        return Entity.objects.filter(user=self.request.user).order_by('-created_at')
+
+
+class PostUpdateProject(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    # En lloc de model = Project, usarem el queryset per ser més flexibles
+    model = Project
+    fields = ['title', 'description', 'tags']
+    template_name = 'components/project_form.html'
+    success_url = reverse_lazy('core:my_entities')
+
+    def test_func(self):
+        # Fem un try/except per si l'objecte no és un projecte
+        try:
+            project = self.get_object()
+            return self.request.user == project.user
+        except:
+            return False
+
+    def get_object(self, queryset=None):
+        try:
+            return super().get_object(queryset)
+        except Project.DoesNotExist:
+            raise Http404("This resource is a File, not a Project, and cannot be edited this way.")
+
+    def post(self, request, *args, **kwargs):
+        data = request.POST.copy()
+        tags_enviats = data.getlist('tags')
+        nous_ids = []
+        for valor in tags_enviats:
+            valor = valor.strip()
+            if not valor: continue
+
+            es_uuid = False
+            try:
+                uuid.UUID(valor)
+                es_uuid = True
+            except ValueError:
+                es_uuid = False
+
+            if es_uuid:
+                tag_obj = Tag.objects.filter(tag_id=valor).first()
+                if tag_obj:
+                    nous_ids.append(str(tag_obj.pk))
+                    continue
+
+            tag_obj, _ = Tag.objects.get_or_create(tag=valor)
+            nous_ids.append(str(tag_obj.pk))
+
+        data.setlist('tags', nous_ids)
+        request.POST = data
+        return super().post(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        self.object = form.save()
+
+        media_to_delete = self.request.POST.getlist('delete_media')
+        if media_to_delete:
+            self.object.media_items.remove(*media_to_delete)
+
+        files = self.request.FILES.getlist('upload_files')
+        for f in files:
+            new_media = Media.objects.create(
+                title=f"{f.name} (Added)",
+                user=self.request.user,
+                type=2,
+                status=self.object.status,
+                file=f,
+                filename=f.name,
+                mimetype=f.content_type
+            )
+            self.object.media_items.add(new_media)
+
+        return HttpResponseRedirect(self.get_success_url())
+
+
+class PostDeleteProject(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Project
+    success_url = reverse_lazy('core:my_entities')
+
+    def test_func(self):
+        return self.request.user == self.get_object().user

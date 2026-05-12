@@ -13,6 +13,9 @@
     .select2-container--default .select2-selection--multiple { border: 1px solid #ced4da !important; min-height: 38px; }
     .form-group { margin-bottom: 1rem; }
     .form-label { font-weight: 600; font-size: 0.85rem; margin-bottom: 0.3rem; display: block; }
+    .cursor-pointer { cursor: pointer; }
+    /* Estil per als fitxers que ja estan al servidor */
+    .existing-file { background-color: #e9ecef; border: 1px solid #dee2e6; }
 </style>
 
 <div class="container py-4">
@@ -20,7 +23,9 @@
         <div class="col-md-6">
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-primary text-white py-2">
-                    <h5 class="mb-0 text-center">New Project</h5>
+                    <h5 class="mb-0 text-center">
+                        {% if object.pk %} Edit Project: {{ object.title }} {% else %} New Project {% endif %}
+                    </h5>
                 </div>
 
                 <div class="card-body p-4 compact-form">
@@ -59,15 +64,32 @@
                             </label>
 
                             <div id="fileListPreview" class="mt-2 d-flex flex-wrap gap-2">
-                                <p class="text-muted small w-100 mb-0" id="noFilesMsg">No files selected yet.</p>
+
+                                {# 1. MOSTRAR FITXERS QUE JA EXISTEIXEN AL SERVIDOR #}
+                                {% if object.pk %}
+                                    {% for media in object.media_items.all %}
+                                    <span class="badge existing-file text-dark p-2 small d-flex align-items-center shadow-sm" id="badge-existing-{{ media.pk }}">
+                                        <i class="bi bi-cloud-check me-2 text-success"></i>
+                                        {{ media.filename }}
+                                        <i class="bi bi-x-lg ms-2 text-danger cursor-pointer" onclick="markForDeletion('{{ media.pk }}')"></i>
+                                        <input type="checkbox" name="delete_media" value="{{ media.pk }}" id="check-{{ media.pk }}" class="d-none">
+                                    </span>
+                                    {% endfor %}
+                                {% endif %}
+
+                                {# 2. AQUEST P SERVIRÀ DE MISSATGE SI NO HI HA RES #}
+                                <p class="text-muted small w-100 mb-0 d-none" id="noFilesMsg">No files selected yet.</p>
                             </div>
                         </div>
 
                         <div class="d-grid gap-2 mt-4">
-                            <button type="submit" class="btn btn-primary">Publish Project</button>
-                            <a href="{% url 'core:home' %}" class="btn btn-sm btn-link text-secondary text-center">Cancel</a>
+                            <button type="submit" class="btn btn-primary">
+                                {% if object.pk %} Update Changes {% else %} Publish Project {% endif %}
+                            </button>
+                            <a href="javascript:history.back()" class="btn btn-sm btn-link text-secondary text-center">Cancel</a>
                         </div>
-                    </form> </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
@@ -83,48 +105,51 @@ $(document).ready(function() {
         placeholder: "Write or select tags...", width: '100%'
     });
 
-    // Lògica per acumular fitxers
     const fileInput = document.getElementById('fileInput');
     const preview = document.getElementById('fileListPreview');
-    let allFiles = []; // Llista interna per guardar tots els fitxers afegits
+    let allFiles = [];
 
+    // Lògica per als nous fitxers (els que puges ara)
     fileInput.addEventListener('change', function(e) {
         const newFiles = Array.from(e.target.files);
-
-        // Afegim els nous fitxers a la nostra llista global
         allFiles = allFiles.concat(newFiles);
-
         renderPreview();
-        updateInputFiles(); // Actualitzem l'input real per a l'enviament
+        updateInputFiles();
     });
 
     function renderPreview() {
-        preview.innerHTML = '';
-        if (allFiles.length === 0) {
-            preview.innerHTML = '<p class="text-muted small w-100 mb-0">No files selected yet.</p>';
-            return;
-        }
+        // Netegem només els badges de "nous fitxers" (els que no tenen la classe existing-file)
+        document.querySelectorAll('.new-file-badge').forEach(el => el.remove());
 
         allFiles.forEach((file, index) => {
             const badge = document.createElement('span');
-            badge.className = 'badge bg-light text-dark border p-2 small d-flex align-items-center shadow-sm';
+            badge.className = 'badge bg-light text-dark border p-2 small d-flex align-items-center shadow-sm new-file-badge';
             badge.innerHTML = `
-                <i class="bi bi-file-earmark-check me-2 text-primary"></i>
+                <i class="bi bi-file-earmark-plus me-2 text-primary"></i>
                 ${file.name}
-                <i class="bi bi-x-lg ms-2 text-danger cursor-pointer" onclick="removeFile(${index})" style="cursor:pointer"></i>
+                <i class="bi bi-x-lg ms-2 text-danger cursor-pointer" onclick="removeFile(${index})"></i>
             `;
             preview.appendChild(badge);
         });
     }
 
-    // Funció per esborrar un fitxer de la llista abans de pujar-lo
     window.removeFile = function(index) {
         allFiles.splice(index, 1);
         renderPreview();
         updateInputFiles();
     };
 
-    // Truc tècnic per sincronitzar la nostra llista JS amb l'input del formulari
+    // LÒGICA PER ESBORRAR FITXERS QUE JA EXISTIEN AL SERVIDOR
+    window.markForDeletion = function(mediaId) {
+        const checkbox = document.getElementById('check-' + mediaId);
+        const badge = document.getElementById('badge-existing-' + mediaId);
+
+        if (checkbox) {
+            checkbox.checked = true; // Marquem per borrar a Django
+            badge.classList.add('d-none'); // Amaguem visualment
+        }
+    };
+
     function updateInputFiles() {
         const dataTransfer = new DataTransfer();
         allFiles.forEach(file => dataTransfer.items.add(file));
