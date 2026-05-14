@@ -48,12 +48,26 @@ class Entity(models.Model):
             return reverse('core:media_detail', kwargs={'pk': self.pk})
         return reverse('core:home')
 
+
 class Media(Entity):
     file = models.FileField(upload_to='uploads/%Y/%m/%d', null=True)
-    storage_url = models.TextField()
-    filename = models.CharField(max_length=255)
-    mimetype = models.CharField(max_length=100)
-    size = models.BigIntegerField()
+    # Cambia esta línea:
+    storage_url = models.TextField(blank=True, null=True)
+    filename = models.CharField(max_length=255, blank=True)
+    mimetype = models.CharField(max_length=100, blank=True)
+    size = models.BigIntegerField(null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if self.file:
+            if not self.size:
+                self.size = self.file.size
+            if not self.filename:
+                self.filename = self.file.name
+            # Si no tienes una URL externa, puedes guardar la ruta del archivo por defecto
+            if not self.storage_url:
+                self.storage_url = self.file.url
+
+        super().save(*args, **kwargs)
 
     def get_absolute_url(self):
         return reverse('core:media_detail', kwargs={'pk': self.pk})

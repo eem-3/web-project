@@ -8,7 +8,9 @@ from django.shortcuts import render, get_object_or_404
 from .models import Entity, Project, Media, Comment, Tag, Status
 from django.http import HttpResponseRedirect, Http404
 from django.contrib.auth.mixins import UserPassesTestMixin, LoginRequiredMixin
-
+from django.shortcuts import render, get_object_or_404, redirect
+from .models import Entity
+from django.views import View
 def view_home(request):
     if request.user.is_authenticated:
         llista_entitats = Entity.objects.all()
@@ -192,9 +194,18 @@ class PostUpdateProject(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         return HttpResponseRedirect(self.get_success_url())
 
 
-class PostDeleteProject(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
-    model = Project
-    success_url = reverse_lazy('core:my_entities')
+class PostDeleteProject(LoginRequiredMixin, UserPassesTestMixin, View):
+    def post(self, request, pk):
+        # BUSCAMOS EN ENTITY, no en Project
+        entity = get_object_or_404(Entity, pk=pk)
+
+        # Opcional: Verificar que el usuario es el dueño
+        if entity.user == request.user:
+            entity.delete()
+
+        return redirect('core:my_entities')
 
     def test_func(self):
-        return self.request.user == self.get_object().user
+        # Lógica de seguridad para el mixin
+        entity = get_object_or_404(Entity, pk=self.kwargs.get('pk'))
+        return entity.user == self.request.user
