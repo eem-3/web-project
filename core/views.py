@@ -8,13 +8,29 @@ from django.shortcuts import render, get_object_or_404
 from .models import Entity, Project, Media, Comment, Tag, Status
 from django.http import HttpResponseRedirect, Http404
 from django.contrib.auth.mixins import UserPassesTestMixin, LoginRequiredMixin
+from django.db.models import Q
+
 
 def view_home(request):
-    if request.user.is_authenticated:
-        llista_entitats = Entity.objects.all()
-        return render(request, 'components/home.html', {'entities': llista_entitats})
-    else:
+    if not request.user.is_authenticated:
         return render(request, 'components/homedemo.html')
+
+    query = request.GET.get('q', '').strip()
+
+    entities = Entity.objects.all().prefetch_related('tags').order_by('-created_at')
+
+    if query:
+        entities = entities.filter(
+            Q(title__icontains=query) |
+            Q(description__icontains=query) |
+            Q(tags__tag__icontains=query)
+        ).distinct()
+
+    context = {
+        'entities': entities,
+        'query': query,
+    }
+    return render(request, 'components/home.html', context)
 
 class SignUpView(CreateView):
     """Sign up view."""
