@@ -1,14 +1,64 @@
 import uuid
-
-from django.template.context_processors import request
+import requests
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, ListView, UpdateView, DeleteView
-from .forms import BootstrapUserCreationForm
 from django.shortcuts import render, get_object_or_404
-from .models import Entity, Project, Media, Comment, Tag, Status
 from django.http import HttpResponseRedirect, Http404
 from django.contrib.auth.mixins import UserPassesTestMixin, LoginRequiredMixin
-from django.db.models import Q
+
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+
+from .models import Entity, Project, Media, Comment, Tag, Status
+from .forms import BootstrapUserCreationForm
+from .serializers import TagSerializer
+
+
+def get_api_tag_choices(request):
+    """
+    Obtiene los tags desde la API para popular el formulario.
+    Si el DEBUG TAG aparece, confirmamos que la API responde.
+    """
+    try:
+        api_url = request.build_absolute_uri(reverse_lazy('core:api_tags_list'))
+        response = requests.get(api_url, timeout=5)
+        if response.status_code == 200:
+            return [(t['tag_id'], t['tag']) for t in response.json()]
+    except Exception as e:
+        print(f"Error obteniendo tags de la API: {e}")
+    return []
+
+def resolve_tag_ids(request, tags_enviats):
+    """
+    GESTIÓN ÚNICA:
+    - Ignora el tag de debug (debug-static-id).
+    - Mantiene UUIDs existentes.
+    - Crea nuevos tags vía POST a la API si recibe texto plano.
+    """
+    nous_ids = []
+    try:
+        api_url = request.build_absolute_uri(reverse_lazy('core:api_tags_list'))
+    except:
+        api_url = request.build_absolute_uri('/api/tags/')
+
+    for valor in tags_enviats:
+        valor = valor.strip()
+        # Filtro de seguridad para el tag de debug y vacíos
+        if not valor or valor == 'debug-static-id':
+            continue
+
+        try:
+            uuid.UUID(valor)
+            nous_ids.append(valor)
+        except ValueError:
+            # Si no es UUID, es texto nuevo: delegamos a la API
+            try:
+                response = requests.post(api_url, data={'tag': valor}, timeout=5)
+                if response.status_code in [200, 201]:
+                    nous_ids.append(response.json().get('tag_id'))
+            except Exception as e:
+                print(f"Error en resolve_tag_ids via API: {e}")
+    return nous_ids
 
 
 def view_home(request):
@@ -63,35 +113,20 @@ class PostCreateProject(CreateView):
     template_name = 'components/project_form.html'
     success_url = reverse_lazy('core:home')
 
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        choices = get_api_tag_choices(self.request)
+        form.fields['tags'].choices = choices
+        return form
+
     def post(self, request, *args, **kwargs):
         data = request.POST.copy()
         tags_enviats = data.getlist('tags')
-
-        nous_ids = []
-        for valor in tags_enviats:
-            valor = valor.strip()
-            if not valor:
-                continue
-
-            es_uuid = False
-            try:
-                uuid.UUID(valor)
-                es_uuid = True
-            except ValueError:
-                es_uuid = False
-
-            if es_uuid:
-                tag_existent = Tag.objects.filter(tag_id=valor).first()
-                if tag_existent:
-                    nous_ids.append(str(tag_existent.pk))
-                    continue
-
-            tag_obj, _ = Tag.objects.get_or_create(tag=valor)
-            nous_ids.append(str(tag_obj.pk))
-
+        
+        nous_ids = resolve_tag_ids(request, tags_enviats)
+        
         data.setlist('tags', nous_ids)
         request.POST = data
-
         return super().post(request, *args, **kwargs)
 
     def form_valid(self, form):
@@ -151,29 +186,18 @@ class PostUpdateProject(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         except Project.DoesNotExist:
             raise Http404("This resource is a File, not a Project, and cannot be edited this way.")
 
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        choices = get_api_tag_choices(self.request)
+        form.fields['tags'].choices = choices
+        return form
+
     def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
         data = request.POST.copy()
         tags_enviats = data.getlist('tags')
-        nous_ids = []
-        for valor in tags_enviats:
-            valor = valor.strip()
-            if not valor: continue
-
-            es_uuid = False
-            try:
-                uuid.UUID(valor)
-                es_uuid = True
-            except ValueError:
-                es_uuid = False
-
-            if es_uuid:
-                tag_obj = Tag.objects.filter(tag_id=valor).first()
-                if tag_obj:
-                    nous_ids.append(str(tag_obj.pk))
-                    continue
-
-            tag_obj, _ = Tag.objects.get_or_create(tag=valor)
-            nous_ids.append(str(tag_obj.pk))
+        
+        nous_ids = resolve_tag_ids(request, tags_enviats)
 
         data.setlist('tags', nous_ids)
         request.POST = data
@@ -200,11 +224,52 @@ class PostUpdateProject(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
             self.object.media_items.add(new_media)
 
         return HttpResponseRedirect(self.get_success_url())
-
-
+    
 class PostDeleteProject(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Project
     success_url = reverse_lazy('core:my_entities')
 
     def test_func(self):
         return self.request.user == self.get_object().user
+    
+
+# API
+# --- API VIEWS (DJANGO REST FRAMEWORK) ---
+
+@api_view(['GET', 'POST'])
+def api_tags_list(request):
+    """
+    Single source of truth para Tags.
+    """
+    if request.method == 'GET':
+        tags = Tag.objects.all()
+        serializer = TagSerializer(tags, many=True)
+        
+        # Añadimos el tag de debug manualmente a la lista serializada
+        data = list(serializer.data)
+        data.append({
+            'tag_id': 'debug-static-id', 
+            'tag': 'DEBUG TAG (API ONLY)'
+        })
+        return Response(data)
+
+    if request.method == 'POST':
+        tag_name = request.data.get('tag', '').strip()
+        if not tag_name:
+            return Response({"error": "No tag name provided"}, status=400)
+        
+        # Aquí la API decide si crea o recupera de la DB
+        tag_obj, created = Tag.objects.get_or_create(tag=tag_name)
+        serializer = TagSerializer(tag_obj)
+        status_code = 201 if created else 200
+        return Response(serializer.data, status=status_code)
+
+def lista_tags_frontend(request):
+    """Vista para visualizar los tags consumiendo la propia API"""
+    try:
+        api_url = request.build_absolute_uri(reverse_lazy('core:api_tags_list'))
+        response = requests.get(api_url)
+        tags_list = response.json()
+    except Exception:
+        tags_list = []
+    return render(request, 'tags_display.html', {'tags': tags_list})
