@@ -11,4 +11,6 @@ urlpatterns = [
     path('my-content/', views.MyEntitiesView.as_view(), name='my_entities'),
     path('project/edit/<uuid:pk>/', views.PostUpdateProject.as_view(), name='project_edit'),
     path('project/delete/<uuid:pk>/', views.PostDeleteProject.as_view(), name='project_delete'),
+    path('api/tags/', views.api_tags_list, name='api_tags_list'),
+    path('tags-view/', views.lista_tags_frontend, name='tags_frontend'),
 ]

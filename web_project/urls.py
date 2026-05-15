@@ -1,17 +1,15 @@
 from django.contrib import admin
 from django.urls import include, path
 
-from core import views
 from core.views import SignUpView
 from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('accounts/', include('django.contrib.auth.urls')),  # provides accounts/login/ and accounts/logout/
+    path('accounts/', include('django.contrib.auth.urls')),
     path('accounts/signup/', SignUpView.as_view(), name='signup'),
     path('', include('core.urls')),
-    path('entity/delete/<uuid:pk>/', views.PostDeleteProject.as_view(), name='project_delete'),
 ]
 
 if settings.DEBUG:
