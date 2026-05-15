@@ -34,21 +34,17 @@ def view_home(request):
 
 class SignUpView(CreateView):
     """Sign up view."""
-    form_class = BootstrapUserCreationForm         # the form to show (username + password + confirm)
-    template_name = 'registration/signup.html'     # the HTML template to render
-    success_url = reverse_lazy('login')            # after signup, redirect to the login page
+    form_class = BootstrapUserCreationForm
+    template_name = 'registration/signup.html'
+    success_url = reverse_lazy('login')
 
 
 def EntityView1(request, pk):
-    # Obtenemos la entidad base
     entity = get_object_or_404(Entity, pk=pk)
 
-    # Intentamos obtener la versión específica (Project o Media)
-    # Django permite acceder al "hijo" desde el "padre" en minúsculas
     project = getattr(entity, 'project', None)
     media = getattr(entity, 'media', None)
 
-    # Obtenemos los comentarios asociados a esta entidad
     comments = Comment.objects.filter(entity=entity).order_by('-created_at')
 
     context = {
@@ -112,7 +108,7 @@ class PostCreateProject(CreateView):
             new_media = Media.objects.create(
                 title=f"{f.name} [{self.object.title}]",
                 description=f"Resource uploaded for {self.object.title}",
-                description_ai="",  # Camp buit per defecte
+                description_ai="",
                 user=self.request.user,
                 type=2,  # Tipus Media
                 status=self.object.status,
@@ -137,14 +133,12 @@ class MyEntitiesView(ListView):
 
 
 class PostUpdateProject(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
-    # En lloc de model = Project, usarem el queryset per ser més flexibles
     model = Project
     fields = ['title', 'description', 'tags']
     template_name = 'components/project_form.html'
     success_url = reverse_lazy('core:my_entities')
 
     def test_func(self):
-        # Fem un try/except per si l'objecte no és un projecte
         try:
             project = self.get_object()
             return self.request.user == project.user

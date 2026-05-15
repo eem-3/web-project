@@ -14,7 +14,6 @@
     .form-group { margin-bottom: 1rem; }
     .form-label { font-weight: 600; font-size: 0.85rem; margin-bottom: 0.3rem; display: block; }
     .cursor-pointer { cursor: pointer; }
-    /* Estil per als fitxers que ja estan al servidor */
     .existing-file { background-color: #e9ecef; border: 1px solid #dee2e6; }
 </style>
 
@@ -65,7 +64,6 @@
 
                             <div id="fileListPreview" class="mt-2 d-flex flex-wrap gap-2">
 
-                                {# 1. MOSTRAR FITXERS QUE JA EXISTEIXEN AL SERVIDOR #}
                                 {% if object.pk %}
                                     {% for media in object.media_items.all %}
                                     <span class="badge existing-file text-dark p-2 small d-flex align-items-center shadow-sm" id="badge-existing-{{ media.pk }}">
@@ -77,7 +75,6 @@
                                     {% endfor %}
                                 {% endif %}
 
-                                {# 2. AQUEST P SERVIRÀ DE MISSATGE SI NO HI HA RES #}
                                 <p class="text-muted small w-100 mb-0 d-none" id="noFilesMsg">No files selected yet.</p>
                             </div>
                         </div>
@@ -88,6 +85,7 @@
                             </button>
                             <a href="javascript:history.back()" class="btn btn-sm btn-link text-secondary text-center">Cancel</a>
                         </div>
+
                     </form>
                 </div>
             </div>
@@ -109,7 +107,6 @@ $(document).ready(function() {
     const preview = document.getElementById('fileListPreview');
     let allFiles = [];
 
-    // Lògica per als nous fitxers (els que puges ara)
     fileInput.addEventListener('change', function(e) {
         const newFiles = Array.from(e.target.files);
         allFiles = allFiles.concat(newFiles);
@@ -118,7 +115,6 @@ $(document).ready(function() {
     });
 
     function renderPreview() {
-        // Netegem només els badges de "nous fitxers" (els que no tenen la classe existing-file)
         document.querySelectorAll('.new-file-badge').forEach(el => el.remove());
 
         allFiles.forEach((file, index) => {
