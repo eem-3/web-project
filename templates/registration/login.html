@@ -1,38 +1,62 @@
 {% extends "base.html" %}
 
-{% block title %}Login - My Blog{% endblock %}
+{% block title %}Log In{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-12 col-sm-8 col-md-6 col-lg-4">
+<div class="row justify-content-center auth-page">
+    <div class="col-12 col-sm-9 col-md-6 col-lg-4">
+        <div class="card auth-card shadow border-0">
 
-        <h1 class="mb-4 text-center">Login</h1>
+            <div class="card-header auth-card-header text-center py-4 border-0">
+                <i class="bi bi-box-arrow-in-right auth-icon"></i>
+                <h4 class="text-white mt-2 mb-1 fw-semibold">Welcome back</h4>
+                <p class="text-white-50 small mb-0">Sign in to your account</p>
+            </div>
 
-        {% if form.errors %}
-        <div class="alert alert-danger" role="alert">
-            Invalid username or password. Please try again.
+            <div class="card-body px-4 py-4">
+
+                {% if form.errors %}
+                <div class="alert alert-danger d-flex align-items-center py-2 mb-4" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2 flex-shrink-0"></i>
+                    <span class="small">Invalid username or password. Please try again.</span>
+                </div>
+                {% endif %}
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="id_username" class="form-label auth-label">Username</label>
+                        <div class="input-group">
+                            <span class="input-group-text auth-input-icon">
+                                <i class="bi bi-person"></i>
+                            </span>
+                            {{ form.username }}
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label for="id_password" class="form-label auth-label">Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text auth-input-icon">
+                                <i class="bi bi-lock"></i>
+                            </span>
+                            {{ form.password }}
+                        </div>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-dark btn-lg auth-submit">
+                            Log In
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+
+            <div class="card-footer auth-card-footer text-center py-3">
+                <span class="text-muted small">Don't have an account?</span>
+                <a href="{% url 'signup' %}" class="ms-1 small fw-semibold">Sign up</a>
+            </div>
+
         </div>
-        {% endif %}
-
-        <form method="post">
-            {% csrf_token %}
-            <div class="mb-3">
-                <label for="id_username" class="form-label fw-semibold">Username:</label>
-                {{ form.username }}
-            </div>
-            <div class="mb-3">
-                <label for="id_password" class="form-label fw-semibold">Password:</label>
-                {{ form.password }}
-            </div>
-            <div class="d-grid mt-4">
-                <button type="submit" class="btn btn-primary">Login</button>
-            </div>
-        </form>
-
-        <p class="text-center mt-3 mb-0">
-            Don't have an account? <a href="{% url 'signup' %}">Sign up here</a>
-        </p>
-
     </div>
 </div>
 {% endblock %}
