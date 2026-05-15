@@ -99,8 +99,20 @@
 <script>
 $(document).ready(function() {
     $('#id_tags').select2({
-        tags: true, tokenSeparators: [',', ' '],
-        placeholder: "Write or select tags...", width: '100%'
+        tags: true, 
+        tokenSeparators: [',', ' '],
+        placeholder: "Write or select tags...",
+        width: '100%',
+        // Esto permite que si escribes algo nuevo, se cree la opción visualmente
+        createTag: function (params) {
+            var term = $.trim(params.term);
+            if (term === '') { return null; }
+            return {
+                id: term,
+                text: term,
+                newTag: true
+            };
+        }
     });
 
     const fileInput = document.getElementById('fileInput');
