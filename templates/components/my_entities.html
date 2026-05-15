@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-dark">My Resources</h2>
+        <a href="{% url 'core:project_create' %}" class="btn btn-primary rounded-pill px-4 shadow-sm">
+            Upload Resource
+        </a>
+    </div>
+
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for entity in entities %}
+        <div class="col">
+            <div class="card h-100 shadow-sm border-secondary border-opacity-10 position-relative">
+
+                <span class="position-absolute top-0 end-0 m-2 badge bg-secondary bg-opacity-75" style="font-size: 0.7rem; letter-spacing: 0.5px;">
+                    {% if entity.type == 1 %}PROJECT{% else %}MEDIA{% endif %}
+                </span>
+
+                <div class="card-body">
+                    <h5 class="card-title text-primary fw-bold mb-1">{{ entity.title }}</h5>
+                    <p class="text-muted small mb-2">{{ entity.user.username }}</p>
+                    <p class="card-text text-secondary" style="font-size: 0.9rem;">
+                        {{ entity.description|truncatewords:20 }}
+                    </p>
+                </div>
+
+                <div class="card-footer bg-transparent border-top-0 d-flex justify-content-between align-items-center pb-3">
+                    <span class="badge bg-secondary text-white px-3 py-2" style="font-size: 0.75rem; border-radius: 8px; background-color: #6c757d !important;">
+                        {{ entity.total_votes|default:"0" }} votes
+                    </span>
+
+                    <div class="d-flex align-items-center gap-2">
+
+                        {# Només permetem EDITAR si és un Projecte (Tipus 1) per evitar el 404 #}
+                        {% if entity.type == 1 %}
+                        <a href="{% url 'core:project_edit' entity.pk %}" class="btn btn-sm btn-outline-primary p-1 px-2" title="Edit" style="border-color: #dee2e6;">
+                            <i class="bi bi-pencil-square"></i>
+                        </a>
+                        {% endif %}
+
+                        <button type="button"
+                                class="btn btn-sm btn-outline-danger p-1 px-2"
+                                style="border-color: #dee2e6;"
+                                data-bs-toggle="modal"
+                                data-bs-target="#deleteModal"
+                                data-entity-id="{{ entity.pk }}"
+                                data-entity-title="{{ entity.title }}">
+                            <i class="bi bi-trash"></i>
+                        </button>
+
+                        <a href="{{ entity.get_absolute_url }}" class="btn btn-sm btn-outline-primary px-3 fw-medium">
+                            See more
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <i class="bi bi-folder2-open display-1 text-light"></i>
+            <p class="text-muted mt-3">You haven't published anything yet.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteModalLabel"><i class="bi bi-exclamation-triangle me-2"></i> Confirm Delete</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <p class="text-muted mb-1">Are you sure you want to delete this resource?</p>
+                <h5 id="entityTitleDisplay" class="fw-bold text-dark"></h5>
+                <p class="text-danger small mt-3 mb-0">
+                    <i class="bi bi-info-circle"></i> This action is permanent and cannot be undone.
+                </p>
+            </div>
+            <div class="modal-footer border-0 d-flex justify-content-center pb-4">
+                <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="post" action="">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger px-4 shadow-sm">Yes, Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteModal = document.getElementById('deleteModal');
+    if (deleteModal) {
+        deleteModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget; // Botó que ha obert el modal
+            const entityId = button.getAttribute('data-entity-id');
+            const entityTitle = button.getAttribute('data-entity-title');
+
+            // Omplim el títol del projecte al modal
+            document.getElementById('entityTitleDisplay').textContent = entityTitle;
+
+            // Ajustem l'acció del formulari amb l'ID real
+            const deleteForm = document.getElementById('deleteForm');
+            deleteForm.action = `/project/delete/${entityId}/`;
+        });
+    }
+});
+</script>
+{% endblock %}

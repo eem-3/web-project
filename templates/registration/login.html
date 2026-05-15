@@ -3,23 +3,36 @@
 {% block title %}Login - My Blog{% endblock %}
 
 {% block content %}
-<h1>Login</h1>
+<div class="row justify-content-center">
+    <div class="col-12 col-sm-8 col-md-6 col-lg-4">
 
-{% if form.errors %}  <!-- Django sets form.errors when login fails -->
-<p class="error-text">Invalid username or password. Please try again.</p>
-{% endif %}
+        <h1 class="mb-4 text-center">Login</h1>
 
-<!-- method="post" = send form data in the request body (not in the URL) -->
-<form method="post" class="form-narrow">
-    {% csrf_token %}  <!-- security: adds a hidden token to prevent fake form submissions (see below) -->
-    <div class="form-group">
-        <label for="id_username" class="form-label">Username:</label>
-        {{ form.username }}  <!-- Django renders the <input> field automatically -->
+        {% if form.errors %}
+        <div class="alert alert-danger" role="alert">
+            Invalid username or password. Please try again.
+        </div>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="id_username" class="form-label fw-semibold">Username:</label>
+                {{ form.username }}
+            </div>
+            <div class="mb-3">
+                <label for="id_password" class="form-label fw-semibold">Password:</label>
+                {{ form.password }}
+            </div>
+            <div class="d-grid mt-4">
+                <button type="submit" class="btn btn-primary">Login</button>
+            </div>
+        </form>
+
+        <p class="text-center mt-3 mb-0">
+            Don't have an account? <a href="{% url 'signup' %}">Sign up here</a>
+        </p>
+
     </div>
-    <div class="form-group">
-        <label for="id_password" class="form-label">Password:</label>
-        {{ form.password }}
-    </div>
-    <button type="submit" class="btn btn-blue">Login</button>
-</form>
+</div>
 {% endblock %}
