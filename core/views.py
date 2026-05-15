@@ -41,20 +41,35 @@ class SignUpView(CreateView):
 
 def EntityView1(request, pk):
     entity = get_object_or_404(Entity, pk=pk)
-
     project = getattr(entity, 'project', None)
     media = getattr(entity, 'media', None)
 
-    comments = Comment.objects.filter(entity=entity).order_by('-created_at')
+    if request.method == 'POST':
+        if not request.user.is_authenticated:
+            return HttpResponseRedirect('/accounts/login/')
+        text = request.POST.get('comment_text', '').strip()
+        parent_id = request.POST.get('parent_id', '').strip()
+        if text:
+            parent = None
+            if parent_id:
+                parent = Comment.objects.filter(comment_id=parent_id, entity=entity).first()
+            Comment.objects.create(entity=entity, user=request.user, text=text, parent=parent)
+        return HttpResponseRedirect(request.path + '#comments')
 
-    context = {
+    comments = (
+        Comment.objects
+        .filter(entity=entity, parent=None)
+        .order_by('created_at')
+        .select_related('user')
+        .prefetch_related('replies__user')
+    )
+
+    return render(request, 'components/entity_detail.html', {
         'entity': entity,
         'project': project,
         'media': media,
         'comments': comments,
-    }
-
-    return render(request, 'components/entity_detail.html', context)
+    })
 
 
 class PostCreateProject(CreateView):

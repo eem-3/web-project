@@ -1,13 +1,9 @@
 from django.contrib import admin
 from django.urls import include, path
 
-from core.views import SignUpView, view_home, EntityView1
-
 from core.views import SignUpView
-from django.contrib.auth.views import LogoutView
 from django.conf import settings
 from django.conf.urls.static import static
-from core.views import SignUpView, entity_detail
 
 urlpatterns = [
     path('admin/', admin.site.urls),

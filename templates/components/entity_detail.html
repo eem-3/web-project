@@ -27,15 +27,9 @@
 
                 <div class="card shadow-sm border text-center overflow-hidden" style="min-width: 100px;">
 
-                    {% if entity.up_votes == 1 %}
                     <div class="btn btn-info btn-sm w-100 rounded-0 py-2 text-white fw-bold">
-                        <span class="h6 fw-bold mb-0">{{ entity.up_votes }} vote</span>
+                        <span class="h6 fw-bold mb-0">{{ entity.votes.count }} vote{{ entity.votes.count|pluralize }}</span>
                     </div>
-                    {% else %}
-                    <div class="btn btn-info btn-sm w-100 rounded-0 py-2 text-white fw-bold">
-                        <span class="h6 fw-bold mb-0">{{ entity.up_votes }} votes</span>
-                    </div>
-                    {% endif %}
 
                 </div>
             </div>
@@ -98,56 +92,103 @@
                 </div>
             {% endif %}
 
-            <div class="mt-5 pt-4 border-top">
-                <h4 class="mb-4">Comments ({{ comments.count }})</h4>
-                <div class="comments-section bg-light p-4 rounded shadow-sm">
-                    {% for comment in comments %}
-                    <div class="d-flex mb-4 last-child-mb-0 pb-3 border-bottom">
-                        <div class="bg-secondary bg-opacity-25 rounded-circle me-3 flex-shrink-0 d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
-                            <i class="bi bi-person text-secondary"></i>
-                        </div>
-                        <div>
-                            <div class="mb-1">
-                                <span class="fw-bold">{{ comment.user.username }}</span>
-                                <small class="text-muted ms-2">{{ comment.created_at|timesince }}</small>
-                            </div>
-                            <p class="text-muted mb-0 small">{{ comment.text }}</p>
-                        </div>
-                    </div>
-                    {% empty %}
-                    <div class="text-center py-4 text-muted">
-                        <i class="bi bi-chat-dots d-block h1"></i>
-                        <p>There are no comments. Be the first one!</p>
-                    </div>
-                    {% endfor %}
-                </div>
-                <div class="mt-5 pt-4 border-top">
+            <!-- COMMENTS SECTION -->
+            <div class="mt-5 pt-4 border-top" id="comments">
+                <h4 class="mb-4">
+                    <i class="bi bi-chat-dots me-2"></i>Comments
+                    <span class="badge bg-secondary ms-2">{{ comments.count }}</span>
+                </h4>
 
                 {% if user.is_authenticated %}
-                <div class="card border-0 shadow-sm mb-5">
-                    <div class="card-body p-0">
-                        <form method="post" action=".">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body">
+                        <form method="post">
                             {% csrf_token %}
-                            <div class="form-group">
-                                <textarea name="comment_text" class="form-control border-0 " rows="3"
-                                          placeholder="Write your comment here..."
-                                          style="resize: none; border-radius: 10px;" required></textarea>
-                            </div>
-                            <div class="d-flex justify-content-end mt-2 bg-light">
-                                <button href="" type="submit" class="btn btn-primary m-1 px-4 rounded-pill shadow-sm">Publish</button>
+                            <textarea name="comment_text" class="form-control border-0 bg-light" rows="3"
+                                      placeholder="Write your comment here..."
+                                      style="resize: none; border-radius: 10px;" required></textarea>
+                            <div class="d-flex justify-content-end mt-2">
+                                <button type="submit" class="btn btn-primary px-4 rounded-pill shadow-sm">Publish</button>
                             </div>
                         </form>
                     </div>
                 </div>
                 {% else %}
-                <div class="alert alert-light text-center border mb-5">
+                <div class="alert alert-light text-center border mb-4">
                     <small class="text-muted">You must <a href="{% url 'login' %}">log in</a> to comment.</small>
                 </div>
                 {% endif %}
 
+                <div class="comments-list">
+                    {% for comment in comments %}
+                    <div class="card border-0 shadow-sm mb-3" id="comment-{{ comment.comment_id }}">
+                        <div class="card-body">
+                            <div class="d-flex">
+                                <div class="bg-secondary bg-opacity-25 rounded-circle me-3 flex-shrink-0 d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                                    <i class="bi bi-person text-secondary"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="mb-1 d-flex align-items-center flex-wrap gap-2">
+                                        <span class="fw-bold">{{ comment.user.username }}</span>
+                                        {% if comment.user == entity.user %}
+                                        <span class="badge bg-primary">Author</span>
+                                        {% endif %}
+                                        <small class="text-muted">{{ comment.created_at|timesince }} ago</small>
+                                    </div>
+                                    <p class="mb-2">{{ comment.text }}</p>
+
+                                    {% if user.is_authenticated %}
+                                    <button class="btn btn-sm btn-link text-muted p-0 text-decoration-none"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#reply-form-{{ comment.comment_id }}">
+                                        <i class="bi bi-reply"></i> Reply
+                                    </button>
+                                    <div class="collapse mt-2" id="reply-form-{{ comment.comment_id }}">
+                                        <form method="post">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="parent_id" value="{{ comment.comment_id }}">
+                                            <textarea name="comment_text" class="form-control form-control-sm bg-light border-0" rows="2"
+                                                      placeholder="Write your reply..."
+                                                      style="resize: none; border-radius: 8px;" required></textarea>
+                                            <div class="d-flex justify-content-end mt-1">
+                                                <button type="submit" class="btn btn-sm btn-primary rounded-pill px-3 mt-1">Reply</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                    {% endif %}
+
+                                    {% for reply in comment.replies.all %}
+                                    <div class="d-flex mt-3 ps-3 border-start border-2" id="comment-{{ reply.comment_id }}">
+                                        <div class="bg-secondary bg-opacity-25 rounded-circle me-3 flex-shrink-0 d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
+                                            <i class="bi bi-person text-secondary" style="font-size: 0.85rem;"></i>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <div class="mb-1 d-flex align-items-center flex-wrap gap-2">
+                                                <span class="fw-bold small">{{ reply.user.username }}</span>
+                                                {% if reply.user == entity.user %}
+                                                <span class="badge bg-primary" style="font-size: 0.65rem;">Author</span>
+                                                {% endif %}
+                                                <small class="text-muted" style="font-size: 0.75rem;">{{ reply.created_at|timesince }} ago</small>
+                                            </div>
+                                            <p class="mb-0 small">{{ reply.text }}</p>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-5 text-muted">
+                        <i class="bi bi-chat-dots d-block" style="font-size: 3rem;"></i>
+                        <p class="mt-2">No comments yet. Be the first one!</p>
+                    </div>
+                    {% endfor %}
+                </div>
             </div>
 
-            </div>
-
-        </div> </div> </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
